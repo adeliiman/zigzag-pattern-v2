@@ -18,41 +18,47 @@ class BingX:
 Bingx = BingX()
 
 
-def main_job(symbol):
-    print(symbol)
-    min_ = time.gmtime(time.time()).tm_min
-    #print("min_  ", min_)
-    settings = Bingx.settings
+def main_job(items):
+    symbol = items[0]
+    interval = items[1]
+    exchange = items[2]
+    Xmin = items[3]
+    Xmax = items[4]
+    try:
+        zigzag(symbol=symbol, interval=interval, exchange=exchange, Xmin=Xmin, Xmax=Xmax)
+    except Exception as e:
+        print(e)
 
-    for setting in settings:
-        print(setting.timeframe)
-        if setting.timeframe == "3min" and (min_ % 3 == 0):
-            try:
-                zigzag(symbol=symbol, interval='3m', exchange=setting.exchange, Xmin=setting.Xmin, Xmax=setting.Xmax)
-            except Exception as e:
-                print(e)
-        elif setting.timeframe == "5min" and (min_ % 5 == 0):
-            try:
-                zigzag(symbol=symbol, interval='5m', exchange=setting.exchange, Xmin=setting.Xmin, Xmax=setting.Xmax)
-            except Exception as e:
-                print(e)
-        elif setting.timeframe == "15min" and (min_ % 15 == 0):
-            try:
-                zigzag(symbol=symbol, interval='15m', exchange=setting.exchange, Xmin=setting.Xmin, Xmax=setting.Xmax)
-            except Exception as e:
-                print(e)
-        elif setting.timeframe == "30min" and (min_ % 30 == 0):
-            try:
-                zigzag(symbol=symbol, interval='30m', exchange=setting.exchange, Xmin=setting.Xmin, Xmax=setting.Xmax)
-            except Exception as e:
-                print(e)
 
 
 def my_job():
     symbols = Bingx.symbols
-    print(symbols)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-        executor.map(main_job, symbols)
+    min_ = time.gmtime(time.time()).tm_min
+
+    settings = Bingx.settings
+    for setting in settings:
+        exchange = setting.exchange
+        Xmin = setting.Xmin
+        Xmax = setting.Xmax
+        if setting.timeframe == "3min" and (min_ % 3 == 0):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+                items = [(sym, '3m', exchange, Xmin, Xmax) for sym in symbols]
+                executor.map(main_job, items)
+        
+        elif setting.timeframe == "5min" and (min_ % 5 == 0):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+                items = [(sym, '5m', exchange, Xmin, Xmax) for sym in symbols]
+                executor.map(main_job, items)
+        
+        elif setting.timeframe == "15min" and (min_ % 15 == 0):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+                items = [(sym, '15m', exchange, Xmin, Xmax) for sym in symbols]
+                executor.map(main_job, items)
+        
+        elif setting.timeframe == "30min" and (min_ % 30 == 0):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+                items = [(sym, '30m', exchange, Xmin, Xmax) for sym in symbols]
+                executor.map(main_job, items)
 
 
 
