@@ -2,7 +2,7 @@ from fastapi import FastAPI , Request, Response, Depends
 from sqlalchemy.orm import Session
 from starlette.background import BackgroundTasks
 import uvicorn
-from models import  SettingAdmin, SymbolAdmin, Symbols, ReportView, ConfigAdmin
+from models import  SettingAdmin, SymbolAdmin, Symbols, ReportView, ConfigAdmin, Setting
 from database import init_db, engine
 from database import get_db
 from sqladmin import Admin
@@ -49,8 +49,13 @@ async def run(tasks: BackgroundTasks, db: Session = Depends(get_db)):
     ids = [symbol.id for symbol in symbols]
     actives = [symbol.active for symbol in symbols]
     symbols = [symbol.symbol for symbol in symbols if symbol.active]
+    Bingx.symbols = symbols
 
-    tasks.add_task(job, symbols)
+    settings = db.query(Setting).all()
+    Bingx.settings = settings
+    
+
+    tasks.add_task(job)
     Bingx.bot = "Run"
 
     return  RedirectResponse(url="/admin/home")

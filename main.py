@@ -11,18 +11,21 @@ from models import Symbols, Setting
 class BingX:
 	def __init__(self):
 		self.bot = 'Stop' # 'Run'
+		self.settings = []
+		self.symbols = []
 
 
 Bingx = BingX()
 
 
 def main_job(symbol):
-
+    print(symbol)
     min_ = time.gmtime(time.time()).tm_min
     #print("min_  ", min_)
-    db = SessionLocal()
-    settings = db.query(Setting).all()
+    settings = Bingx.settings
+
     for setting in settings:
+        print(setting.timeframe)
         if setting.timeframe == "3min" and (min_ % 3 == 0):
             try:
                 zigzag(symbol=symbol, interval='3m', exchange=setting.exchange, Xmin=setting.Xmin, Xmax=setting.Xmax)
@@ -45,14 +48,16 @@ def main_job(symbol):
                 print(e)
 
 
-def my_job(symbols):
-
+def my_job():
+    symbols = Bingx.symbols
+    print(symbols)
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
         executor.map(main_job, symbols)
 
 
-def job(symbols):
-    schedule.every(1).minutes.at(":02").do(my_job, symbols)
+
+def job():
+    schedule.every(1).minutes.at(":02").do(job_func=my_job)
 
     while True:
         if Bingx.bot == "Stop":
