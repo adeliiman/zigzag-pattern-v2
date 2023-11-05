@@ -6,7 +6,8 @@ import pandas as pd
 
 def getKlines(exchange, symbol, timeframe, limit):
     if exchange == "BingX":
-        bingx = ccxt.bingx({'proxies': {'http': '127.0.0.1:44129','https': '127.0.0.1:44129'}})
+        # bingx = ccxt.bingx()
+        bingx = ccxt.bingx({'proxies': {'http': '127.0.0.1:2081','https': '127.0.0.1:2081'}})
         res = bingx.fetch_ohlcv(symbol="BTC-USDT", timeframe=timeframe, limit=limit)
         res = res[:-1] # last kline isnt closed.
         df = pd.DataFrame(res)
@@ -30,7 +31,8 @@ def getKlines(exchange, symbol, timeframe, limit):
         
     elif exchange == "Binance":
         symbol = symbol.split("-")[0] + symbol.split("-")[1]
-        binance = ccxt.binance({'proxies': {'http': '127.0.0.1:44129','https': '127.0.0.1:44129'}})
+        binance = ccxt.binance()
+        binance = ccxt.binance({'proxies': {'http': '127.0.0.1:2081','https': '127.0.0.1:2081'}})
         res = binance.fetch_ohlcv(symbol=symbol, timeframe=timeframe, limit=limit)
         df = pd.DataFrame(res)
         df[0] = pd.to_datetime(df[0] * 1000000)
@@ -49,6 +51,7 @@ def getKlines(exchange, symbol, timeframe, limit):
     
     elif exchange == "Coinex":
         symbol = symbol.split("-")[0] + symbol.split("-")[1]
+        coinex = ccxt.coinex()
         coinex = ccxt.coinex({'proxies': {'http': '127.0.0.1:44129','https': '127.0.0.1:44129'}})
         res = coinex.fetch_ohlcv(symbol=symbol, timeframe=timeframe, limit=limit)
         res = res[:-1] # last kline isnt closed.
@@ -58,6 +61,7 @@ def getKlines(exchange, symbol, timeframe, limit):
         print(df)
 
     elif exchange == "Bybit":
+        bybit = ccxt.bybit()
         bybit = ccxt.bybit({'proxies': {'http': '127.0.0.1:44129','https': '127.0.0.1:44129'}})
         res = bybit.fetch_ohlcv(symbol=symbol, timeframe=timeframe, limit=limit)
         res = res[:-1] # last kline isnt closed.
@@ -69,9 +73,9 @@ def getKlines(exchange, symbol, timeframe, limit):
     return df
 
 
-# getKlines(exchange="BingX", symbol="ETH-USDT", timeframe="1m", limit=200)
-# getKlines(exchange="Kucoin", symbol="ETH-USDT", timeframe="1m", limit=200)
-# getKlines(exchange="Binance", symbol="ETH-USDT", timeframe="1m", limit=200)
+# getKlines(exchange="BingX", symbol="ETH-USDT", timeframe="4h", limit=200)
+# getKlines(exchange="Kucoin", symbol="ETH-USDT", timeframe="4h", limit=200)
+getKlines(exchange="Binance", symbol="ETH-USDT", timeframe="1h", limit=200)
 # getKlines(exchange="Gateio", symbol="ETH-USDT", timeframe="1m", limit=200)
 # getKlines(exchange="Coinex", symbol="ETH-USDT", timeframe="1m", limit=200)
 # getKlines(exchange="Bybit", symbol="ETH-USDT", timeframe="1m", limit=200)

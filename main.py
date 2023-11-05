@@ -60,6 +60,15 @@ def my_job():
                 items = [(sym, '30m', exchange, Xmin, Xmax) for sym in symbols]
                 executor.map(main_job, items)
 
+        elif setting.timeframe == "1hour" and (min_ == 0):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+                items = [(sym, '1h', exchange, Xmin, Xmax) for sym in symbols]
+                executor.map(main_job, items)
+
+        elif setting.timeframe == "4hour" and (min_ == 0):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+                items = [(sym, '4h', exchange, Xmin, Xmax) for sym in symbols]
+                executor.map(main_job, items)
 
 
 def job():
