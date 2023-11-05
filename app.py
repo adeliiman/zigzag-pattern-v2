@@ -31,13 +31,10 @@ async def startup():
     init_db()
     print("done")
 
+admin.add_view(ReportView)
 admin.add_view(ConfigAdmin)
 admin.add_view(SettingAdmin)
 admin.add_view(SymbolAdmin)
-admin.add_view(ReportView)
-
-
-
 
 
 

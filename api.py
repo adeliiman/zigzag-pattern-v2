@@ -75,7 +75,7 @@ def getKlines(exchange, symbol, timeframe, limit):
 
 # getKlines(exchange="BingX", symbol="ETH-USDT", timeframe="4h", limit=200)
 # getKlines(exchange="Kucoin", symbol="ETH-USDT", timeframe="4h", limit=200)
-getKlines(exchange="Binance", symbol="ETH-USDT", timeframe="1h", limit=200)
+# getKlines(exchange="Binance", symbol="ETH-USDT", timeframe="1h", limit=200)
 # getKlines(exchange="Gateio", symbol="ETH-USDT", timeframe="1m", limit=200)
 # getKlines(exchange="Coinex", symbol="ETH-USDT", timeframe="1m", limit=200)
 # getKlines(exchange="Bybit", symbol="ETH-USDT", timeframe="1m", limit=200)
