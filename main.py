@@ -45,20 +45,14 @@ def main_job(symbol):
                 print(e)
 
 
-def my_job():
-    db = SessionLocal()
-    symbols = db.query(Symbols).all()
-    ids = [symbol.id for symbol in symbols]
-    actives = [symbol.active for symbol in symbols]
-    symbols = [symbol.symbol for symbol in symbols if symbol.active]
-    #print(symbols)
+def my_job(symbols):
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
         executor.map(main_job, symbols)
 
 
-def job():
-    schedule.every(1).minutes.at(":02").do(my_job)
+def job(symbols):
+    schedule.every(1).minutes.at(":02").do(my_job, symbols)
 
     while True:
         if Bingx.bot == "Stop":
