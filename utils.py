@@ -71,7 +71,7 @@ def find_zigzag(df, period, Xmin, Xmax):
             cond3 = df['low'].iloc[R_index] > valleys.values[-1]
             logger.info(f"P: {P_index}, R: {R_index}, S: {S_index}, {cond3}")
             
-            a = min([float(df.low.values[ind]) for ind in range(P_index, R_index+1)])
+            a = min([float(df.low.values[ind]) for ind in range(int(P_index), int(R_index+1))])
             b = max([float(df.high.values[ind]) for ind in range(P_index, R_index+1)])
             c = min([float(df.low.values[ind]) for ind in range(R_index, S_index+1)])
             d = max([float(df.high.values[ind]) for ind in range(R_index, S_index+1)])

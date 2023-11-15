@@ -40,34 +40,24 @@ def my_job():
         exchange = setting.exchange
         Xmin = setting.Xmin
         Xmax = setting.Xmax
+        tf = None
+        
         if setting.timeframe == "3min" and (min_ % 3 == 0):
-            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-                items = [(sym, '3m', exchange, Xmin, Xmax) for sym in symbols]
-                executor.map(main_job, items)
-        
+            tf = '3m'
         elif setting.timeframe == "5min" and (min_ % 5 == 0):
-            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-                items = [(sym, '5m', exchange, Xmin, Xmax) for sym in symbols]
-                executor.map(main_job, items)
-        
+            tf = '5m'
         elif setting.timeframe == "15min" and (min_ % 15 == 0):
-            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-                items = [(sym, '15m', exchange, Xmin, Xmax) for sym in symbols]
-                executor.map(main_job, items)
-        
+            tf = '15m'
         elif setting.timeframe == "30min" and (min_ % 30 == 0):
-            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-                items = [(sym, '30m', exchange, Xmin, Xmax) for sym in symbols]
-                executor.map(main_job, items)
-
+            tf = '30m'
         elif setting.timeframe == "1hour" and (min_ == 0):
-            with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-                items = [(sym, '1h', exchange, Xmin, Xmax) for sym in symbols]
-                executor.map(main_job, items)
-
+            tf = '1h'
         elif setting.timeframe == "4hour" and (min_ == 0):
+            tf = '4h'
+
+        if tf:
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-                items = [(sym, '4h', exchange, Xmin, Xmax) for sym in symbols]
+                items = [(sym, tf, exchange, Xmin, Xmax) for sym in symbols]
                 executor.map(main_job, items)
 
 
