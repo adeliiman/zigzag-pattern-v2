@@ -34,6 +34,7 @@ def main_job(items):
 def my_job():
     symbols = Bingx.symbols
     min_ = time.gmtime(time.time()).tm_min
+    hour_ = time.gmtime(time.time()).tm_hour
 
     settings = Bingx.settings
     for setting in settings:
@@ -41,7 +42,7 @@ def my_job():
         Xmin = setting.Xmin
         Xmax = setting.Xmax
         tf = None
-        
+
         if setting.timeframe == "3min" and (min_ % 3 == 0):
             tf = '3m'
         elif setting.timeframe == "5min" and (min_ % 5 == 0):
@@ -52,7 +53,7 @@ def my_job():
             tf = '30m'
         elif setting.timeframe == "1hour" and (min_ == 0):
             tf = '1h'
-        elif setting.timeframe == "4hour" and (min_ == 0):
+        elif setting.timeframe == "4hour" and (hour_ % 4 == 0):
             tf = '4h'
 
         if tf:
