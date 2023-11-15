@@ -165,3 +165,6 @@ venv
 final
 Bingx.db
 test.py
+Archive
+pics
+*.log
