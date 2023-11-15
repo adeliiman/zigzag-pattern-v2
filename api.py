@@ -13,7 +13,7 @@ def getKlines(exchange, symbol, timeframe, limit):
         df = pd.DataFrame(res)
         df[0] = pd.to_datetime(df[0] * 1000000)
         df.columns = ["time", "open", "high", "low", "close", "volume"]
-        print(df)
+        # print(df)
     
     elif exchange == "Kucoin":
         sym = symbol.split("-")
@@ -58,7 +58,7 @@ def getKlines(exchange, symbol, timeframe, limit):
         df = pd.DataFrame(res)
         df[0] = pd.to_datetime(df[0] * 1000000)
         df.columns = ["time", "open", "high", "low", "close", "volume"]
-        print(df)
+        # print(df)
 
     elif exchange == "Bybit":
         bybit = ccxt.bybit()
@@ -68,7 +68,7 @@ def getKlines(exchange, symbol, timeframe, limit):
         df = pd.DataFrame(res)
         df[0] = pd.to_datetime(df[0] * 1000000)
         df.columns = ["time", "open", "high", "low", "close", "volume"]
-        print(df)
+        # print(df)
 
     return df
 
