@@ -46,28 +46,33 @@ def find_zigzag(df, period, Xmin, Xmax):
         valleys = df.valleys.dropna()
         peaks = df.peaks.dropna()
 
-        # peaks_index_temp = [p_index for p_index in peaks.index if p_index > v1 and p_index < v0]
-        # if peaks_index_temp:
-        #     maxi = max(list(map(lambda p_index: peaks.iloc[peaks.index==p_index].values[0], peaks_index_temp)))
-        #     if peaks.values[-1] > peaks.loc[peaks.values==maxi].values[0]:
-        #         peaks_index.append(peaks.loc[peaks.values==maxi].index[0])
-        #         valleys_index.append(v1)
-        #         print(peaks_index, valleys_index, "*"*10)
 
-        cond1 = peaks.iloc[-1] > peaks.iloc[-2]
-        cond2 = peaks.iloc[-1] > valleys.iloc[-1]
-        cond3 = peaks.index[-1] > valleys.index[-1]
-        cond4 = valleys.values[-1] > valleys.values[-2]
-        cond5 = valleys.index[-1] > peaks.index[-2]
-        logger.info(str(peaks.iloc[-1]))
-        logger.info("\n"+str(cond1)+'---'+ str(cond2)+'---'+ str(cond3)+'---'+ str(cond4)+'---'+ str(cond5))
+        v0 = valleys.index[-1]
+        v1 = valleys.index[-2]
+        p0 = peaks.index[-1]
+        # p1 = peaks.index[-2]
+        p0_value = peaks.iloc[-1]
+        p1_value = peaks.iloc[-2]
+        v0_value = valleys.iloc[-1]
+        v1_value = valleys.iloc[-2]
+
+        peaks_index_temp = [p_index for p_index in peaks.index if p_index > v1 and p_index < v0]
+        if peaks_index_temp:
+            p1 = max(list(map(lambda p_index: peaks.iloc[peaks.index==p_index].index[0], peaks_index_temp)))
+        else:
+            return (x1,x2,x3,x4,x5,x6), (y1,y2,y3,y4,y5,y6) 
+
+
+        cond1 = p0_value > p1_value
+        cond2 = p0_value > v0_value
+        cond3 = p0 > v0
+        cond4 = v0_value > v1_value
+        cond5 = v0 > p1
+        logger.info(str(cond1)+'---'+ str(cond2)+'---'+ str(cond3)+'---'+ str(cond4)+'---'+ str(cond5))
 
         if ( cond1 and cond2 and cond3 and cond4 and cond5):
             #
-            v0 = valleys.index[-1]
-            v1 = valleys.index[-2]
-            p0 = peaks.index[-1]
-            p1 = peaks.index[-2]
+            
             X_distance = v0 - v1 -1 # number of kline between vo and v1
             cond1 = (df.index[-1] - v0 -1) == X_distance * (6/5)
             cond2 = (v0 + X_distance/2 < p0) and (p0 < v0 + X_distance*(4/5))
@@ -76,13 +81,13 @@ def find_zigzag(df, period, Xmin, Xmax):
             P_index = v0 + X_distance*(4/5)
             R_index = v0 + X_distance
             S_index = v0 + X_distance *(6/5)
-            cond3 = df['low'].iloc[R_index] > valleys.values[-1]
+            cond3 = df['low'].iloc[R_index] > v0_value
             logger.info(f"P: {P_index}, R: {R_index}, S: {S_index}, {cond3}")
             
-            a = min([float(df.low.values[ind]) for ind in range(int(P_index), int(R_index)+1)])
-            b = max([float(df.high.values[ind]) for ind in range(int(P_index), int(R_index)+1)])
-            c = min([float(df.low.values[ind]) for ind in range(int(R_index), int(S_index)+1)])
-            d = max([float(df.high.values[ind]) for ind in range(int(R_index), int(S_index)+1)])
+            a = min([float(df.low.values[ind-1]) for ind in range(int(P_index), int(R_index)+1)])
+            b = max([float(df.high.values[ind-1]) for ind in range(int(P_index), int(R_index)+1)])
+            c = min([float(df.low.values[ind-1]) for ind in range(int(R_index), int(S_index)+1)])
+            d = max([float(df.high.values[ind-1]) for ind in range(int(R_index), int(S_index)+1)])
             cond4 = c >= a and d >= b
             cond5 = (X_distance>Xmin) and (X_distance<Xmax)
             logger.info(f"a: {a}, b: {b}, c: {c}, d: {d}, {cond4}, {cond5}")
@@ -125,6 +130,12 @@ def find_zigzag_bearish(df, period, Xmin, Xmax):
         valleys = df.valleys.dropna()
         peaks = df.peaks.dropna()
 
+        peaks_index_temp = [p_index for p_index in peaks.index if p_index > valleys.index[-2] and p_index < valleys.index[-1]]
+        if peaks_index_temp:
+            p1 = max(list(map(lambda p_index: peaks.iloc[peaks.index==p_index].index[0], peaks_index_temp)))
+        else:
+            return (x1,x2,x3,x4,x5,x6), (y1,y2,y3,y4,y5,y6) 
+
         cond1 = peaks.iloc[-1] < peaks.iloc[-2]
         cond2 = peaks.iloc[-1] > valleys.iloc[-1]
         cond3 = peaks.index[-1] > valleys.index[-1]
@@ -137,7 +148,7 @@ def find_zigzag_bearish(df, period, Xmin, Xmax):
             v0 = valleys.index[-1]
             v1 = valleys.index[-2]
             p0 = peaks.index[-1]
-            p1 = peaks.index[-2]
+            # p1 = peaks.index[-2]
             X_distance = v0 - v1 -1 # number of kline between vo and v1
             cond1 = (df.index[-1] - v0 -1) == X_distance * (6/5)
             cond2 = (v0 + X_distance/2 < p0) and (p0 < v0 + X_distance*(4/5))
@@ -149,10 +160,10 @@ def find_zigzag_bearish(df, period, Xmin, Xmax):
             cond3 = df['low'].iloc[R_index] < valleys.values[-1]
             logger.info(f"P: {P_index}, R: {R_index}, S: {S_index}, {cond3}")
             
-            a = min([float(df.low.values[ind]) for ind in range(int(P_index), int(R_index)+1)])
-            b = max([float(df.high.values[ind]) for ind in range(int(P_index), int(R_index)+1)])
-            c = min([float(df.low.values[ind]) for ind in range(int(R_index), int(S_index)+1)])
-            d = max([float(df.high.values[ind]) for ind in range(int(R_index), int(S_index)+1)])
+            a = min([float(df.low.values[ind-1]) for ind in range(int(P_index), int(R_index)+1)])
+            b = max([float(df.high.values[ind-1]) for ind in range(int(P_index), int(R_index)+1)])
+            c = min([float(df.low.values[ind-1]) for ind in range(int(R_index), int(S_index)+1)])
+            d = max([float(df.high.values[ind-1]) for ind in range(int(R_index), int(S_index)+1)])
             cond4 = c >= a and d >= b
             cond5 = (X_distance>Xmin) and (X_distance<Xmax)
             logger.info(f"a: {a}, b: {b}, c: {c}, d: {d}, {cond4}, {cond5}")

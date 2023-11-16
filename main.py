@@ -55,6 +55,8 @@ def my_job():
             tf = '1h'
         elif setting.timeframe == "4hour" and (hour_ % 4 == 0):
             tf = '4h'
+        elif setting.timeframe == "1min":
+            tf = '1m'
 
         if tf:
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
