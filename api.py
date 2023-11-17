@@ -1,14 +1,12 @@
 import ccxt
-from datetime import datetime, timedelta
-import requests
 import pandas as pd
 
 
 def getKlines(exchange, symbol, timeframe, limit):
     if exchange == "BingX":
-        # bingx = ccxt.bingx()
-        bingx = ccxt.bingx({'proxies': {'http': '127.0.0.1:2081','https': '127.0.0.1:2081'}})
-        res = bingx.fetch_ohlcv(symbol="BTC-USDT", timeframe=timeframe, limit=limit)
+        bingx = ccxt.bingx()
+        # bingx = ccxt.bingx({'proxies': {'http': '127.0.0.1:2081','https': '127.0.0.1:2081'}})
+        res = bingx.fetch_ohlcv(symbol=symbol, timeframe=timeframe, limit=limit)
         res = res[:-1] # last kline isnt closed.
         df = pd.DataFrame(res)
         df[0] = pd.to_datetime(df[0] * 1000000)
@@ -32,12 +30,12 @@ def getKlines(exchange, symbol, timeframe, limit):
     elif exchange == "Binance":
         symbol = symbol.split("-")[0] + symbol.split("-")[1]
         binance = ccxt.binance()
-        binance = ccxt.binance({'proxies': {'http': '127.0.0.1:2081','https': '127.0.0.1:2081'}})
+        # binance = ccxt.binance({'proxies': {'http': '127.0.0.1:2081','https': '127.0.0.1:2081'}})
         res = binance.fetch_ohlcv(symbol=symbol, timeframe=timeframe, limit=limit)
         df = pd.DataFrame(res)
         df[0] = pd.to_datetime(df[0] * 1000000)
         df.columns = ["time", "open", "high", "low", "close", "volume"]
-        print(df)
+
     
     elif exchange == "Gateio":
         symbol = symbol.split("-")[0] + "_" + symbol.split("-")[1]
@@ -47,28 +45,28 @@ def getKlines(exchange, symbol, timeframe, limit):
         df = pd.DataFrame(res)
         df[0] = pd.to_datetime(df[0] * 1000000)
         df.columns = ["time", "open", "high", "low", "close", "volume"]
-        print(df)
+
     
     elif exchange == "Coinex":
         symbol = symbol.split("-")[0] + symbol.split("-")[1]
         coinex = ccxt.coinex()
-        coinex = ccxt.coinex({'proxies': {'http': '127.0.0.1:44129','https': '127.0.0.1:44129'}})
+        # coinex = ccxt.coinex({'proxies': {'http': '127.0.0.1:44129','https': '127.0.0.1:44129'}})
         res = coinex.fetch_ohlcv(symbol=symbol, timeframe=timeframe, limit=limit)
         res = res[:-1] # last kline isnt closed.
         df = pd.DataFrame(res)
         df[0] = pd.to_datetime(df[0] * 1000000)
         df.columns = ["time", "open", "high", "low", "close", "volume"]
-        # print(df)
+
 
     elif exchange == "Bybit":
         bybit = ccxt.bybit()
-        bybit = ccxt.bybit({'proxies': {'http': '127.0.0.1:44129','https': '127.0.0.1:44129'}})
+        # bybit = ccxt.bybit({'proxies': {'http': '127.0.0.1:44129','https': '127.0.0.1:44129'}})
         res = bybit.fetch_ohlcv(symbol=symbol, timeframe=timeframe, limit=limit)
         res = res[:-1] # last kline isnt closed.
         df = pd.DataFrame(res)
         df[0] = pd.to_datetime(df[0] * 1000000)
         df.columns = ["time", "open", "high", "low", "close", "volume"]
-        # print(df)
+
 
     return df
 

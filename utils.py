@@ -16,8 +16,6 @@ from setLogger import get_logger
 logger = get_logger(__name__)
 
 
-# df.to_csv('data.csv')
-
 
 def will_frac(df: pd.DataFrame, period: int = 6) -> Tuple[pd.Series, pd.Series]:
     """Indicate bearish and bullish fractal patterns using shifted Series.
@@ -35,54 +33,42 @@ def will_frac(df: pd.DataFrame, period: int = 6) -> Tuple[pd.Series, pd.Series]:
 
     return bears, bulls
 
+# df = pd.read_csv('data.csv')
+# print(df.tail())
+# period = 6
+# peaks, valleys = will_frac(df, period=period)
+# df['peaks'] = df.high[peaks]
+# df['valleys'] = df.low[valleys]
+# valleys = df.valleys.dropna()
+# peaks = df.peaks.dropna()
+# print(peaks)
 
 
 def find_zigzag(df, period, Xmin, Xmax):
-    x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6 = 0,0,0,0,0,0,0,0,0,0,0,0
     try:
-        peaks, valleys = will_frac(df, period=period)
-        df['peaks'] = df.high[peaks]
-        df['valleys'] = df.low[valleys]
-        valleys = df.valleys.dropna()
-        peaks = df.peaks.dropna()
 
+        def temp(p0, p1, v0, v1, p0_value, p1_value, v0_value, v1_value):
+            cond1 = p0_value > p1_value and p0_value > v0_value
+            cond2 = p1_value > v0_value and p1_value > v1_value
+            cond3 = v0_value > v1_value
+            cond4 = p0 > v0 and v0 > p1 and p1 > v1
 
-        v0 = valleys.index[-1]
-        v1 = valleys.index[-2]
-        p0 = peaks.index[-1]
-        # p1 = peaks.index[-2]
-        p0_value = peaks.iloc[-1]
-        p1_value = peaks.iloc[-2]
-        v0_value = valleys.iloc[-1]
-        v1_value = valleys.iloc[-2]
-
-        peaks_index_temp = [p_index for p_index in peaks.index if p_index > v1 and p_index < v0]
-        if peaks_index_temp:
-            p1 = max(list(map(lambda p_index: peaks.iloc[peaks.index==p_index].index[0], peaks_index_temp)))
-        else:
-            return (x1,x2,x3,x4,x5,x6), (y1,y2,y3,y4,y5,y6) 
-
-
-        cond1 = p0_value > p1_value
-        cond2 = p0_value > v0_value
-        cond3 = p0 > v0
-        cond4 = v0_value > v1_value
-        cond5 = v0 > p1
-        logger.info(str(cond1)+'---'+ str(cond2)+'---'+ str(cond3)+'---'+ str(cond4)+'---'+ str(cond5))
-
-        if ( cond1 and cond2 and cond3 and cond4 and cond5):
-            #
+            if not ( cond1 and cond2 and cond3 and cond4):
+                return None
             
             X_distance = v0 - v1 -1 # number of kline between vo and v1
             cond1 = (df.index[-1] - v0 -1) == X_distance * (6/5)
-            cond2 = (v0 + X_distance/2 < p0) and (p0 < v0 + X_distance*(4/5))
-            logger.info(f"v0={v0}, v1={v1}, p0={p0}, p1={p1}, X={X_distance}, {cond1}, {cond2}")
+            cond2 = (v0 + X_distance/2 <= p0) and (p0 <= v0 + X_distance*(4/5))
 
-            P_index = v0 + X_distance*(4/5)
-            R_index = v0 + X_distance
-            S_index = v0 + X_distance *(6/5)
-            cond3 = df['low'].iloc[R_index] > v0_value
-            logger.info(f"P: {P_index}, R: {R_index}, S: {S_index}, {cond3}")
+            N_index = int(v0 + X_distance / 2)
+            P_index = int(v0 + X_distance*(4/5))
+            R_index = int(v0 + X_distance)
+            S_index = int(v0 + X_distance *(6/5))
+
+            if (R_index > df.index[-1]) or (S_index > df.index[-1]):
+                return None
+            
+            cond3 = df['low'].loc[R_index] > v0_value and df['low'].loc[R_index] < p0_value
             
             a = min([float(df.low.values[ind-1]) for ind in range(int(P_index), int(R_index)+1)])
             b = max([float(df.high.values[ind-1]) for ind in range(int(P_index), int(R_index)+1)])
@@ -90,75 +76,90 @@ def find_zigzag(df, period, Xmin, Xmax):
             d = max([float(df.high.values[ind-1]) for ind in range(int(R_index), int(S_index)+1)])
             cond4 = c >= a and d >= b
             cond5 = (X_distance>Xmin) and (X_distance<Xmax)
-            logger.info(f"a: {a}, b: {b}, c: {c}, d: {d}, {cond4}, {cond5}")
+            logger.info(f"{cond1}, {cond2}, {cond3}, {cond4}, {cond5}")
 
 
-            if  cond1 and cond2 and cond3 and cond4 and cond5:
+            if  not(cond1 and cond2 and cond3 and cond4 and cond5):
+                return None
 
-                x1 = df.time.loc[v1]
-                x2 = df.time.loc[p1]
-                x3 = df.time.loc[v0]
-                x4 = df.time.loc[p0]
-                x5 = df.time.loc[R_index]
-                x6 = df.time.loc[-1]
-                
-                y1 = df.valleys.loc[v1]
-                y2 = df.peaks.loc[p1]
-                y3 = df.valleys.loc[v0]
-                y4 = df.peaks.loc[p0] 
-                y5 = df.close.loc[R_index]
-                y6 = float(df.close.loc[-1])
+            x1 = df.time.iloc[v1]
+            x2 = df.time.iloc[p1]
+            x3 = df.time.iloc[v0]
+            x4 = df.time.iloc[p0]
+            x5 = df.time.iloc[R_index]
+            x6 = df.time.iloc[S_index]
+            N_x = df.time.iloc[N_index]
+            P_x = df.time.iloc[P_index]
+            
+            y1 = df.valleys.iloc[v1]
+            y2 = df.peaks.iloc[p1]
+            y3 = df.valleys.iloc[v0]
+            y4 = df.peaks.iloc[p0] 
+            y5 = df.close.iloc[R_index]
+            y6 = float(df.close.iloc[S_index])
+            N_y = df.close.iloc[N_index]
+            P_y = df.close.iloc[P_index]
 
-                logger.info(f"{x1}, {x2}, {x3}, {x4}, {x5}, {x6}")
-                logger.info(f"{y1}, {y2}, {y3}, {y4}, {y5}, {y6}")
+            logger.info(f"{x1}, {x2}, {x3}, {x4}, {x5}, {x6}")
+            logger.info(f"{y1}, {y2}, {y3}, {y4}, {y5}, {y6}")
 
+            return [(x1,x2,x3,x4,x5,x6), (y1,y2,y3,y4,y5,y6), (N_x, P_x, x6), (N_y, P_y, y6)]
+    
+
+        peaks, valleys = will_frac(df, period=period)
+        df['peaks'] = df.high[peaks]
+        df['valleys'] = df.low[valleys]
+        valleys = df.valleys.dropna()
+        peaks = df.peaks.dropna()
+
+        # peaks_index_temp = [p_index for p_index in peaks.index if p_index > v1 and p_index < v0]
+        # if peaks_index_temp:
+        #     p1 = max(list(map(lambda p_index: peaks.iloc[peaks.index==p_index].index[0], peaks_index_temp)))
+
+        for p in peaks.index[::-1]:
+            p0 = p
+            p0_value = peaks.loc[p]
+            for p in peaks[:-1].index[::-1]:
+                p1 = p
+                p1_value = peaks.loc[p]
+                for v in valleys.index[::-1]:
+                    v0 = v
+                    v0_value = valleys.loc[v]
+                    for v in valleys[:-1].index[::-1]:
+                        v1 = v
+                        v1_value = valleys.loc[v]
+                        # logger.debug(f"{p0}, {p0_value}, {p1}, {p1_value}, {v0}, {v0_value}, {v1}, {v1_value}")
+                        return temp(p0, p1, v0, v1, p0_value, p1_value, v0_value, v1_value)
+    
     except Exception as e:
-        logger.exception(str(e))
-
-    return (x1,x2,x3,x4,x5,x6), (y1,y2,y3,y4,y5,y6)
+            logger.exception(str(e))
 
 
-# df = pd.read_csv('data.csv')
-# find_zigzag(df, 6, 30, 100)
 
 def find_zigzag_bearish(df, period, Xmin, Xmax):
-    x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6 = 0,0,0,0,0,0,0,0,0,0,0,0
     try:
-        peaks, valleys = will_frac(df, period=period)
-        df['peaks'] = df.high[peaks]
-        df['valleys'] = df.low[valleys]
-        valleys = df.valleys.dropna()
-        peaks = df.peaks.dropna()
 
-        peaks_index_temp = [p_index for p_index in peaks.index if p_index > valleys.index[-2] and p_index < valleys.index[-1]]
-        if peaks_index_temp:
-            p1 = max(list(map(lambda p_index: peaks.iloc[peaks.index==p_index].index[0], peaks_index_temp)))
-        else:
-            return (x1,x2,x3,x4,x5,x6), (y1,y2,y3,y4,y5,y6) 
+        def temp(p0, p1, v0, v1, p0_value, p1_value, v0_value, v1_value):
+            cond1 = p0_value < p1_value
+            cond2 = p0_value > v0_value
+            cond3 = p0 > v0 and v0 > p1 and p1 > v1
+            cond4 = v0_value < v1_value and v0_value < v1_value and p1_value > v1_value
 
-        cond1 = peaks.iloc[-1] < peaks.iloc[-2]
-        cond2 = peaks.iloc[-1] > valleys.iloc[-1]
-        cond3 = peaks.index[-1] > valleys.index[-1]
-        cond4 = valleys.values[-1] < valleys.values[-2]
-        cond5 = valleys.index[-1] < peaks.index[-2]
-        logger.info("\n"+str(cond1)+'---'+ str(cond2)+'---'+ str(cond3)+'---'+ str(cond4)+'---'+ str(cond5))
-
-        if ( cond1 and cond2 and cond3 and cond4 and cond5):
-            #
-            v0 = valleys.index[-1]
-            v1 = valleys.index[-2]
-            p0 = peaks.index[-1]
-            # p1 = peaks.index[-2]
+            if not ( cond1 and cond2 and cond3 and cond4):
+                return None
+            
             X_distance = v0 - v1 -1 # number of kline between vo and v1
             cond1 = (df.index[-1] - v0 -1) == X_distance * (6/5)
             cond2 = (v0 + X_distance/2 < p0) and (p0 < v0 + X_distance*(4/5))
-            logger.info(f"v0={v0}, v1={v1}, p0={p0}, p1={p1}, X={X_distance}, {cond1}, {cond2}")
 
-            P_index = v0 + X_distance*(4/5)
-            R_index = v0 + X_distance
-            S_index = v0 + X_distance *(6/5)
-            cond3 = df['low'].iloc[R_index] < valleys.values[-1]
-            logger.info(f"P: {P_index}, R: {R_index}, S: {S_index}, {cond3}")
+            N_index = int(v0 + X_distance / 2)
+            P_index = int(v0 + X_distance*(4/5))
+            R_index = int(v0 + X_distance)
+            S_index = int(v0 + X_distance *(6/5))
+
+            if (R_index > df.index[-1]) or (S_index > df.index[-1]):
+                return None
+            cond3 = df['low'].loc[R_index] < v0_value and df['low'].loc[R_index] < p0_value
             
             a = min([float(df.low.values[ind-1]) for ind in range(int(P_index), int(R_index)+1)])
             b = max([float(df.high.values[ind-1]) for ind in range(int(P_index), int(R_index)+1)])
@@ -166,37 +167,64 @@ def find_zigzag_bearish(df, period, Xmin, Xmax):
             d = max([float(df.high.values[ind-1]) for ind in range(int(R_index), int(S_index)+1)])
             cond4 = c >= a and d >= b
             cond5 = (X_distance>Xmin) and (X_distance<Xmax)
-            logger.info(f"a: {a}, b: {b}, c: {c}, d: {d}, {cond4}, {cond5}")
+            logger.info(f"{cond1}, {cond2}, {cond3}, {cond4}, {cond5}")
 
 
-            if  cond1 and cond2 and cond3 and cond4 and cond5:
+            if  not(cond1 and cond2 and cond3 and cond4 and cond5):
+                return None
 
-                x1 = df.time.loc[v1]
-                x2 = df.time.loc[p1]
-                x3 = df.time.loc[v0]
-                x4 = df.time.loc[p0]
-                x5 = df.time.loc[R_index]
-                x6 = df.time.loc[-1]
-                
-                y1 = df.valleys.loc[v1]
-                y2 = df.peaks.loc[p1]
-                y3 = df.valleys.loc[v0]
-                y4 = df.peaks.loc[p0] 
-                y5 = df.close.loc[R_index]
-                y6 = float(df.close.loc[-1])
+            x1 = df.time.iloc[v1]
+            x2 = df.time.iloc[p1]
+            x3 = df.time.iloc[v0]
+            x4 = df.time.iloc[p0]
+            x5 = df.time.iloc[R_index]
+            x6 = df.time.iloc[S_index]
+            N_x = df.time.iloc[N_index]
+            P_x = df.time.iloc[P_index]
+            
+            y1 = df.valleys.iloc[v1]
+            y2 = df.peaks.iloc[p1]
+            y3 = df.valleys.iloc[v0]
+            y4 = df.peaks.iloc[p0] 
+            y5 = df.close.iloc[R_index]
+            y6 = float(df.close.iloc[S_index])
+            N_y = df.close.iloc[N_index]
+            P_y = df.close.iloc[P_index]
 
-                logger.info(f"{x1}, {x2}, {x3}, {x4}, {x5}, {x6}")
-                logger.info(f"{y1}, {y2}, {y3}, {y4}, {y5}, {y6}")
+            logger.info(f"{x1}, {x2}, {x3}, {x4}, {x5}, {x6}")
+            logger.info(f"{y1}, {y2}, {y3}, {y4}, {y5}, {y6}")
 
+            return [(x1,x2,x3,x4,x5,x6), (y1,y2,y3,y4,y5,y6), (N_x, P_x, x6), (N_y, P_y, y6)]
+    
+
+        peaks, valleys = will_frac(df, period=period)
+        df['peaks'] = df.high[peaks]
+        df['valleys'] = df.low[valleys]
+        valleys = df.valleys.dropna()
+        peaks = df.peaks.dropna()
+
+
+        for p in peaks.index[::-1]:
+            p0 = p
+            p0_value = peaks.loc[p]
+            for p in peaks[:-1].index[::-1]:
+                p1 = p
+                p1_value = peaks.loc[p]
+                for v in valleys.index[::-1]:
+                    v0 = v
+                    v0_value = valleys.loc[v]
+                    for v in valleys[:-1].index[::-1]:
+                        v1 = v
+                        v1_value = valleys.loc[v]
+                        return temp(p0, p1, v0, v1, p0_value, p1_value, v0_value, v1_value)
+    
     except Exception as e:
-        logger.exception(str(e))
-
-    return (x1,x2,x3,x4,x5,x6), (y1,y2,y3,y4,y5,y6)
+            logger.exception(str(e))
 
 
 
 
-def get_candlestick_chart(df: pd.DataFrame, symbol, interval, X, Y):
+def get_candlestick_chart(df: pd.DataFrame, symbol, interval, X, Y, XX, YY):
 
     layout = go.Layout(
         title = symbol + "    " + interval,
@@ -221,7 +249,13 @@ def get_candlestick_chart(df: pd.DataFrame, symbol, interval, X, Y):
                 ),
                 go.Scatter(x = df.time, y=df.peaks.values, mode="markers", marker_color="red", marker_size=13),
                 go.Scatter(x = df.time, y=df.valleys.values, mode="markers", marker_color="green", marker_size=13),
-                go.Scatter(x=X, y=Y)
+                go.Scatter(x=X, y=Y),
+            #     go.Scatter(x=[XX[0], XX[0]], y=[YY[0]*0.98, YY[0]*1.02]),
+            #     go.Scatter(x=[XX[1], XX[1]], y=[YY[1]*0.98, YY[1]*1.02]),
+            #     go.Scatter(x=[XX[2], XX[2]], y=[YY[2]*0.98, YY[2]*1.02]),
+            #     go.Scatter(x=[X[1], X[1]], y=[Y[1]*0.98, Y[1]*1.02]),
+            #     go.Scatter(x=[X[3], X[3]], y=[Y[3]*0.98, Y[3]*1.02]),
+            #     go.Scatter(x=[X[5], X[5]], y=[Y[5]*0.98, Y[5]*1.02]),
             ]
         )
         fig.update_xaxes(rangeslider_visible = False,)
@@ -246,36 +280,47 @@ def get_candlestick_chart(df: pd.DataFrame, symbol, interval, X, Y):
         return fig
 
 
-def zigzag(symbol="BTC-USDT", interval='3m', period=3, exchange="BingX", Xmin=10, Xmax=30):
+def zigzag(symbol, interval, period=6, exchange="BingX", Xmin=10, Xmax=100):
     df = getKlines(exchange, symbol, timeframe=interval, limit=200)
     # df = pd.read_csv('data.csv')
-    X, Y = find_zigzag(df, period=period, Xmin=Xmin, Xmax=Xmax)
-    fig = None
-    fig = get_candlestick_chart(df, symbol, interval, X, Y)
-    if fig:
-        fig.show()
-        file = "./pics/" + exchange + '_' + symbol +'_'+ interval
-        pio.write_image(fig, file=file, format='png')
-        # db = SessionLocal()
-        # configs = db.query(Config).all()
-        # for config in configs:
-        #     sendPhoto(file, config.telegramToken, config.telegramID)
-        # #
-        # send_gmail(file)
+    for period in [3,4,5,6,7,8,9,10]:
 
-    X, Y = find_zigzag_bearish(df, period=period, Xmin=Xmin, Xmax=Xmax)
-    fig = None
-    fig = get_candlestick_chart(df, symbol, interval, X, Y)
-    if fig:
-        fig.show()
-        file = "./pics/" + exchange + '_' + symbol +'_'+ interval
-        pio.write_image(fig, file=file, format='png')
-    #     db = SessionLocal()
-    #     configs = db.query(Config).all()
-    #     for config in configs:
-    #         sendPhoto(file, config.telegramToken, config.telegramID)
-    #     #
-    #     send_gmail(file)
+        res = find_zigzag(df, period=period, Xmin=Xmin, Xmax=Xmax)
+        if res:
+            X = res[0]
+            Y = res[1]
+            XX = res[2]
+            YY = res[3]
+            fig = None
+            fig = get_candlestick_chart(df, symbol, interval, X, Y, XX, YY)
+            if fig:
+                fig.show()
+                file = "./pics/" + exchange + '_' + symbol +'_'+ interval
+                pio.write_image(fig, file=file, format='png')
+                db = SessionLocal()
+                configs = db.query(Config).all()
+                for config in configs:
+                    sendPhoto(file, config.telegramToken, config.telegramID)
+                #
+                send_gmail(file)
+
+        res = find_zigzag_bearish(df, period=period, Xmin=Xmin, Xmax=Xmax)
+        if res:
+            X = res[0]
+            Y = res[1]
+            XX = res[2]
+            YY = res[3]
+            fig = None
+            fig = get_candlestick_chart(df, symbol, interval, X, Y, XX, YY)
+            if fig:
+                fig.show()
+                file = "./pics/" + exchange + '_' + symbol +'_'+ interval
+                pio.write_image(fig, file=file, format='png')
+                db = SessionLocal()
+                configs = db.query(Config).all()
+                for config in configs:
+                    sendPhoto(file, config.telegramToken, config.telegramID)
+                #
+                send_gmail(file)
 
 
-# zigzag()

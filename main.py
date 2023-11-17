@@ -2,11 +2,6 @@ import time
 import schedule
 import concurrent.futures
 from utils import zigzag
-from sqlalchemy.orm import Session
-from database import SessionLocal
-from database import get_db
-from fastapi import Depends
-from models import Symbols, Setting
 
 class BingX:
 	def __init__(self):
@@ -31,7 +26,7 @@ def main_job(items):
 
 
 
-def my_job():
+def schedule_job():
     symbols = Bingx.symbols
     min_ = time.gmtime(time.time()).tm_min
     hour_ = time.gmtime(time.time()).tm_hour
@@ -55,8 +50,8 @@ def my_job():
             tf = '1h'
         elif setting.timeframe == "4hour" and (hour_ % 4 == 0):
             tf = '4h'
-        elif setting.timeframe == "1min":
-            tf = '1m'
+        # elif setting.timeframe == "1min":
+        #     tf = '1m'
 
         if tf:
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
@@ -65,7 +60,7 @@ def my_job():
 
 
 def job():
-    schedule.every(1).minutes.at(":02").do(job_func=my_job)
+    schedule.every(1).minutes.at(":02").do(job_func=schedule_job)
 
     while True:
         if Bingx.bot == "Stop":

@@ -34,7 +34,7 @@ class SettingAdmin(ModelView, model=Setting):
     name = "Setting"
     name_plural = "Setting"
     icon = "fa-solid fa-user"
-    form_args = dict(timeframe=dict(default="5min", choices=["5min", "3min", "15min", "30min", "1hour", "4hour", "1min"]), 
+    form_args = dict(timeframe=dict(default="5min", choices=["5min", "3min", "15min", "30min", "1hour", "4hour"]), 
                      exchange=dict(default="BingX", choices=["BingX", "Kucoin", "Binance", "Bybit", "Coinex", "Gateio"])
                      )
     form_overrides =  dict(timeframe=wtforms.SelectField, exchange=wtforms.SelectField)
